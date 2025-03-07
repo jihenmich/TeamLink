@@ -36,6 +36,7 @@ backend/.coverage
 backend/instance/
 
 # 🏗️ Infrastruktur (Ansible, Terraform, Docker)
+infra/ansible/inventory.ini
 infra/ansible/*.retry
 infra/ansible/.vault_pass
 infra/terraform/.terraform/
