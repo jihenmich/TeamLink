@@ -1,0 +1,32 @@
+- name: Install Jenkins
+  hosts: azure
+  become: true
+  tasks:
+    - name: Installiere notwendige Pakete
+      apt:
+        name:
+          - openjdk-11-jdk
+          - curl
+          - gnupg
+        state: present
+        update_cache: yes
+
+    - name: Importiere den Jenkins GPG-Schlüssel
+      shell: |
+        curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+
+    - name: Jenkins-Repository hinzufügen
+      shell: |
+        echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/" | tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+
+    - name: Jenkins installieren
+      apt:
+        name: jenkins
+        state: present
+        update_cache: yes
+
+    - name: Jenkins starten und aktivieren
+      systemd:
+        name: jenkins
+        state: started
+        enabled: yes

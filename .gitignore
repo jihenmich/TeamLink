@@ -1,0 +1,82 @@
+# 📂 Root-Verzeichnis
+.DS_Store
+node_modules/
+dist/
+.env
+.env.local
+*.log
+*.lock
+.idea/
+.vscode/
+*.bak
+
+# 🚀 Frontend (React + Zustand)
+frontend/node_modules/
+frontend/.next/
+frontend/.parcel-cache/
+frontend/.turbo/
+frontend/.eslintcache
+frontend/build/
+frontend/dist/
+frontend/yarn.lock
+frontend/package-lock.json
+frontend/.env
+frontend/.env.local
+
+# 🐍 Backend (FastAPI + Python)
+backend/__pycache__/
+backend/*.pyc
+backend/.venv/
+backend/venv/
+backend/.mypy_cache/
+backend/.pytest_cache/
+backend/.env
+backend/.env.local
+backend/.coverage
+backend/instance/
+
+# 🏗️ Infrastruktur (Ansible, Terraform, Docker)
+infra/ansible/*.retry
+infra/ansible/.vault_pass
+infra/terraform/.terraform/
+infra/terraform/terraform.tfstate*
+infra/terraform/.terraform.lock.hcl
+infra/terraform/terraform.tfvars
+infra/terraform/.terraformrc
+infra/terraform/.tfvars.json
+infra/docker/.dockerignore
+infra/docker/docker-compose.override.yml
+
+# 🐳 Docker
+*.dockerignore
+docker-compose.override.yml
+docker-compose.dev.yml
+docker-compose.prod.yml
+docker-compose.test.yml
+.docker/
+.docker/config.json
+
+# 🔧 Jenkins & CI/CD
+jenkins_home/
+jenkins.log
+workspace/
+builds/
+secrets/
+config.xml
+casc_configs/
+
+# 🚀 Logs & Temporary Files
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pip-log.txt
+pip-delete-this-directory.txt
+
+# 🛡️ SSH & Credentials (WICHTIG!)
+id_rsa
+id_rsa.pub
+*.pem
+*.key
+*.crt
