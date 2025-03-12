@@ -3,79 +3,125 @@ provider "azurerm" {
   subscription_id = var.subscription_id
 }
 
-# Abrufen der bestehenden Ressourcengruppe
+# 📌 Abrufen der bestehenden Ressourcengruppe
 data "azurerm_resource_group" "teamlink_rg" {
   name = var.resource_group_name
 }
 
-# Erstellen eines virtuellen Netzwerks und Subnetzes
-resource "azurerm_virtual_network" "example" {
-  name                = "example-network"
+# 📌 Virtuelles Netzwerk (VNet) - Einmal erstellen, dann wiederverwenden
+resource "azurerm_virtual_network" "teamlink_vnet" {
+  name                = "teamlink-network"
   location            = data.azurerm_resource_group.teamlink_rg.location
   resource_group_name = data.azurerm_resource_group.teamlink_rg.name
   address_space       = ["10.0.0.0/16"]
+
+  lifecycle {
+    prevent_destroy = true  # 🛑 Verhindert, dass Terraform das VNet löscht
+  }
 }
 
-resource "azurerm_subnet" "example" {
-  name                 = "example-subnet"
+# 📌 Subnetz - Einmal erstellen, dann wiederverwenden
+resource "azurerm_subnet" "teamlink_subnet" {
+  name                 = "teamlink-subnet"
   resource_group_name  = data.azurerm_resource_group.teamlink_rg.name
-  virtual_network_name = azurerm_virtual_network.example.name
+  virtual_network_name = azurerm_virtual_network.teamlink_vnet.name
   address_prefixes     = ["10.0.1.0/24"]
+
+  lifecycle {
+    prevent_destroy = true  # 🛑 Verhindert Löschen durch Terraform
+  }
 }
 
-# Netzwerkschnittstelle für Jenkins VM
+# 📌 Statische Public IPs (Einmal erstellen & speichern)
+resource "azurerm_public_ip" "jenkins_ip" {
+  name                = "jenkins-public-ip"
+  location            = data.azurerm_resource_group.teamlink_rg.location
+  resource_group_name = data.azurerm_resource_group.teamlink_rg.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+
+  lifecycle {
+    prevent_destroy = true  # 🛑 Verhindert, dass Terraform die IP erneut erstellt
+  }
+}
+
+resource "azurerm_public_ip" "docker_swarm_node_ip" {
+  name                = "docker-swarm-node-public-ip"
+  location            = data.azurerm_resource_group.teamlink_rg.location
+  resource_group_name = data.azurerm_resource_group.teamlink_rg.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+
+  lifecycle {
+    prevent_destroy = true  # 🛑 IP bleibt nach dem ersten Apply bestehen
+  }
+}
+
+resource "azurerm_public_ip" "docker_swarm_worker_ip" {
+  name                = "docker-swarm-worker-public-ip"
+  location            = data.azurerm_resource_group.teamlink_rg.location
+  resource_group_name = data.azurerm_resource_group.teamlink_rg.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+# 📌 Netzwerkschnittstellen für VMs - Bleiben nach Erstinstallation bestehen
 resource "azurerm_network_interface" "jenkins" {
   name                = "jenkins-nic"
   location            = data.azurerm_resource_group.teamlink_rg.location
   resource_group_name = data.azurerm_resource_group.teamlink_rg.name
 
   ip_configuration {
-    name                          = "internal"
-    subnet_id                    = azurerm_subnet.example.id
+    name                          = "jenkins-ipconfig"
+    subnet_id                     = azurerm_subnet.teamlink_subnet.id
     private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.jenkins_ip.id
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
-# Netzwerkschnittstelle für Docker Swarm Node VM
 resource "azurerm_network_interface" "docker_swarm_node" {
   name                = "docker-swarm-node-nic"
   location            = data.azurerm_resource_group.teamlink_rg.location
   resource_group_name = data.azurerm_resource_group.teamlink_rg.name
 
   ip_configuration {
-    name                          = "internal"
-    subnet_id                    = azurerm_subnet.example.id
+    name                          = "docker-swarm-node-ipconfig"
+    subnet_id                     = azurerm_subnet.teamlink_subnet.id
     private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.docker_swarm_node_ip.id
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
-# Netzwerkschnittstelle für Docker Swarm Worker VM
 resource "azurerm_network_interface" "docker_swarm_worker" {
   name                = "docker-swarm-worker-nic"
   location            = data.azurerm_resource_group.teamlink_rg.location
   resource_group_name = data.azurerm_resource_group.teamlink_rg.name
 
   ip_configuration {
-    name                          = "internal"
-    subnet_id                    = azurerm_subnet.example.id
+    name                          = "docker-swarm-worker-ipconfig"
+    subnet_id                     = azurerm_subnet.teamlink_subnet.id
     private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.docker_swarm_worker_ip.id
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
-# Zufällige ID für Disknamen (damit jeder Diskname einzigartig ist)
-resource "random_id" "jenkins_id" {
-  byte_length = 8
-}
-
-resource "random_id" "docker_swarm_node_id" {
-  byte_length = 8
-}
-
-resource "random_id" "docker_swarm_worker_id" {
-  byte_length = 8
-}
-
-# Erstellen der Jenkins-VM
+# 📌 Jenkins-VM erstellen
 resource "azurerm_virtual_machine" "jenkins" {
   name                  = "Jenkins"
   resource_group_name   = data.azurerm_resource_group.teamlink_rg.name
@@ -84,7 +130,7 @@ resource "azurerm_virtual_machine" "jenkins" {
   network_interface_ids = [azurerm_network_interface.jenkins.id]
 
   storage_os_disk {
-    name              = "jenkins-os-disk-${random_id.jenkins_id.hex}"
+    name              = "jenkins-os-disk"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
@@ -99,20 +145,16 @@ resource "azurerm_virtual_machine" "jenkins" {
 
   os_profile {
     computer_name  = "jenkins-vm"
-    admin_username = var.admin_username  # Dies sollte in deiner `variables.tf` definiert sein
-    admin_password = var.admin_password  # Dies sollte in deiner `variables.tf` definiert sein
+    admin_username = var.admin_username
+    admin_password = var.admin_password
   }
 
   os_profile_linux_config {
     disable_password_authentication = false
   }
-
-  tags = {
-    environment = "teamlink"
-  }
 }
 
-# Erstellen der Docker Swarm Node-VM
+# 📌 Docker Swarm Node-VM erstellen
 resource "azurerm_virtual_machine" "docker_swarm_node" {
   name                  = "DockerSwarmNode"
   resource_group_name   = data.azurerm_resource_group.teamlink_rg.name
@@ -121,7 +163,7 @@ resource "azurerm_virtual_machine" "docker_swarm_node" {
   network_interface_ids = [azurerm_network_interface.docker_swarm_node.id]
 
   storage_os_disk {
-    name              = "docker-swarm-node-os-disk-${random_id.docker_swarm_node_id.hex}"
+    name              = "docker-swarm-node-os-disk"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
@@ -143,13 +185,9 @@ resource "azurerm_virtual_machine" "docker_swarm_node" {
   os_profile_linux_config {
     disable_password_authentication = false
   }
-
-  tags = {
-    environment = "teamlink"
-  }
 }
 
-# Erstellen der Docker Swarm Worker-VM
+# 📌 Docker Swarm Worker-VM erstellen
 resource "azurerm_virtual_machine" "docker_swarm_worker" {
   name                  = "DockerSwarmWorker"
   resource_group_name   = data.azurerm_resource_group.teamlink_rg.name
@@ -158,7 +196,7 @@ resource "azurerm_virtual_machine" "docker_swarm_worker" {
   network_interface_ids = [azurerm_network_interface.docker_swarm_worker.id]
 
   storage_os_disk {
-    name              = "docker-swarm-worker-os-disk-${random_id.docker_swarm_worker_id.hex}"
+    name              = "docker-swarm-worker-os-disk"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
@@ -180,20 +218,18 @@ resource "azurerm_virtual_machine" "docker_swarm_worker" {
   os_profile_linux_config {
     disable_password_authentication = false
   }
-
-  tags = {
-    environment = "teamlink"
-  }
 }
 
-output "jenkins_vm_id" {
-  value = azurerm_virtual_machine.jenkins.id
+
+# 📌 Outputs, damit du die Public IPs nach Terraform Apply sehen kannst
+output "jenkins_public_ip" {
+  value = azurerm_public_ip.jenkins_ip.ip_address
 }
 
-output "docker_swarm_node_vm_id" {
-  value = azurerm_virtual_machine.docker_swarm_node.id
+output "docker_swarm_node_public_ip" {
+  value = azurerm_public_ip.docker_swarm_node_ip.ip_address
 }
 
-output "docker_swarm_worker_vm_id" {
-  value = azurerm_virtual_machine.docker_swarm_worker.id
+output "docker_swarm_worker_public_ip" {
+  value = azurerm_public_ip.docker_swarm_worker_ip.ip_address
 }
