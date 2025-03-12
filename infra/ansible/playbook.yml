@@ -2,31 +2,80 @@
   hosts: azure
   become: true
   tasks:
+    - name: Aktualisiere Paketlisten und behebe Paketprobleme
+      apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: Installiere OpenJDK 17 (erforderlich für Jenkins)
+      apt:
+        name: openjdk-17-jdk
+        state: present
+        update_cache: yes
+
+    - name: Setze Java 17 als Standard
+      shell: |
+        update-alternatives --set java /usr/lib/jvm/java-17-openjdk-amd64/bin/java
+      changed_when: false
+
+    - name: Überprüfe installierte Java-Version
+      shell: java -version
+      register: java_version
+      changed_when: false
+
+    - name: Zeige installierte Java-Version
+      debug:
+        msg: "Java-Version: {{ java_version.stdout }}"
+
     - name: Installiere notwendige Pakete
       apt:
         name:
-          - openjdk-11-jdk
           - curl
           - gnupg
+          - software-properties-common
         state: present
         update_cache: yes
 
     - name: Importiere den Jenkins GPG-Schlüssel
-      shell: |
-        curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+      ansible.builtin.get_url:
+        url: https://pkg.jenkins.io/debian/jenkins.io-2023.key
+        dest: /usr/share/keyrings/jenkins-keyring.asc
+        mode: '0644'
 
     - name: Jenkins-Repository hinzufügen
-      shell: |
-        echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/" | tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian binary/"
+        state: present
+        filename: jenkins
 
-    - name: Jenkins installieren
+    - name: Erzwinge vollständiges Update nach Repository-Änderung
+      apt:
+        update_cache: yes
+
+    - name: Installiere Jenkins
       apt:
         name: jenkins
         state: present
         update_cache: yes
 
-    - name: Jenkins starten und aktivieren
+    - name: Stelle sicher, dass Jenkins gestartet und aktiviert ist
       systemd:
         name: jenkins
         state: started
         enabled: yes
+
+    - name: Öffne Port 8080 in der Firewall (falls UFW genutzt wird)
+      command: ufw allow 8080/tcp
+      register: ufw_status
+      changed_when: "'Skipping adding existing rule' not in ufw_status.stdout"
+      ignore_errors: yes
+
+    - name: Überprüfe, ob Jenkins läuft
+      command: systemctl is-active jenkins
+      register: jenkins_status
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Zeige Jenkins-Status
+      debug:
+        msg: "Jenkins läuft: {{ jenkins_status.stdout }}"

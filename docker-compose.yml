@@ -1,0 +1,56 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./backend
+    container_name: teamlink_backend
+    environment:
+      DATABASE_URL: postgresql://teamlink:password@db:5432/teamlinkdb
+    networks:
+      - teamlink_network
+    depends_on:
+      - db
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    container_name: teamlink_frontend
+    networks:
+      - teamlink_network
+    depends_on:
+      - backend
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "3000:80"
+
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: teamlink
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: teamlinkdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - teamlink_network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+networks:
+  teamlink_network:
+    driver: overlay
+
+volumes:
+  postgres_data:
+    driver: local
