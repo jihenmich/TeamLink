@@ -16,8 +16,8 @@ pipeline {
 
         stage('Build Docker Images') {
             steps {
-                sh 'docker build -t teamlink-backend backend/'  
-                sh 'docker build -t teamlink-frontend frontend/'  
+                sh 'docker build -t teamlink-backend Backend/'  
+                sh 'docker build -t teamlink-frontend Frontend/'  
             }
         }
 
