@@ -4,7 +4,13 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/jihenmich/TeamLink.git'  
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/jihenmich/TeamLink.git',
+                    ]]
+                ])
             }
         }
 
