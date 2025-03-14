@@ -1,7 +1,10 @@
 from fastapi import FastAPI
+from app.api.endpoints.employees import router as employees_router
 
-app = FastAPI()
+app = FastAPI(title="TeamLink API")
+
+app.include_router(employees_router, prefix="/api")
 
 @app.get("/")
-def read_root():
-    return {"message": "TeamLink Backend is running!"}
+def root():
+    return {"message": "Welcome to TeamLink API!"}
