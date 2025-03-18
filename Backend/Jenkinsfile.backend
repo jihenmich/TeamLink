@@ -1,0 +1,41 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout Backend Code') {
+            steps {
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/jihenmich/TeamLink.git',
+                    ]]
+                ])
+            }
+        }
+
+        stage('Build Docker Images') {
+            steps {
+                sh 'docker build -t teamlink-backend Backend/'  
+            }
+        }
+
+        stage('Start Backend Services') {
+            steps {
+                sh 'docker compose up -d backend'
+            }
+        }
+
+        stage('Run Backend Tests') {
+            steps {
+                sh 'docker exec teamlink-backend pytest tests --maxfail=1 --disable-warnings -q'
+            }
+        }
+
+        stage('Stop Backend Services') {
+            steps {
+                sh 'docker compose down'
+            }
+        }
+    }
+}
