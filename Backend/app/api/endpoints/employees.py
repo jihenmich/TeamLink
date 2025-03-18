@@ -2,7 +2,10 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.db import repository, session
-from app.schemas.employee import EmployeeCreate, EmployeeUpdate, TimeTrackingCreate, VacationRequestCreate, PayrollCreate
+from app.schemas.employee import EmployeeCreate, EmployeeUpdate
+from app.schemas.time_tracking import TimeTrackingCreate
+from app.schemas.leave import LeaveCreate  # Geändert von VacationRequestCreate zu LeaveCreate
+from app.schemas.payroll import PayrollCreate
 
 router = APIRouter()
 
@@ -37,11 +40,11 @@ def add_time_tracking(employee_id: int, time_tracking: TimeTrackingCreate, db: S
     time_tracking.employee_id = employee_id
     return repository.add_time_tracking(db=db, time_tracking=time_tracking)
 
-# Urlaubsanfrage hinzufügen
-@router.post("/{employee_id}/vacation-request/")
-def add_vacation_request(employee_id: int, vacation_request: VacationRequestCreate, db: Session = Depends(session.get_db)):
-    vacation_request.employee_id = employee_id
-    return repository.add_vacation_request(db=db, vacation_request=vacation_request)
+# Urlaubsanfrage (Leave) hinzufügen
+@router.post("/{employee_id}/leave/")  # Geändert von /vacation-request/ zu /leave/
+def add_leave(employee_id: int, leave_request: LeaveCreate, db: Session = Depends(session.get_db)):
+    leave_request.employee_id = employee_id
+    return repository.add_leave(db=db, leave_request=leave_request)
 
 # Gehaltsabrechnung hinzufügen
 @router.post("/{employee_id}/payroll/")

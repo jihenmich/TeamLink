@@ -1,9 +1,11 @@
-# app/db/repository.py
 from sqlalchemy.orm import Session
-from app.db.models import Employee
+from app.db.models import Employee, TimeTracking, Leave, Payroll  # Geändert von VacationRequest zu Leave
 from app.schemas.employee import EmployeeCreate, EmployeeUpdate
+from app.schemas.time_tracking import TimeTrackingCreate, TimeTrackingUpdate
+from app.schemas.leave import LeaveCreate, LeaveUpdate  # Geändert von VacationRequestCreate und VacationRequestUpdate zu LeaveCreate und LeaveUpdate
+from app.schemas.payroll import PayrollCreate, PayrollUpdate
 
-# Mitarbeiter erstellen
+# --- Mitarbeiterfunktionen ---
 def add_employee(db: Session, employee: EmployeeCreate):
     db_employee = Employee(name=employee.name, hours_worked=employee.hours_worked)
     db.add(db_employee)
@@ -11,15 +13,12 @@ def add_employee(db: Session, employee: EmployeeCreate):
     db.refresh(db_employee)
     return db_employee
 
-# Alle Mitarbeiter abrufen
 def get_employees(db: Session):
     return db.query(Employee).all()
 
-# Mitarbeiter anhand der ID abrufen
 def get_employee_by_id(db: Session, employee_id: int):
     return db.query(Employee).filter(Employee.id == employee_id).first()
 
-# Mitarbeiter aktualisieren
 def update_employee(db: Session, employee_id: int, employee: EmployeeUpdate):
     db_employee = db.query(Employee).filter(Employee.id == employee_id).first()
     if db_employee:
@@ -29,10 +28,110 @@ def update_employee(db: Session, employee_id: int, employee: EmployeeUpdate):
         db.refresh(db_employee)
     return db_employee
 
-# Mitarbeiter löschen
 def delete_employee(db: Session, employee_id: int):
     db_employee = db.query(Employee).filter(Employee.id == employee_id).first()
     if db_employee:
         db.delete(db_employee)
         db.commit()
     return db_employee
+
+# --- Zeiterfassungsfunktionen ---
+def add_time_tracking(db: Session, time_tracking: TimeTrackingCreate):
+    db_time_tracking = TimeTracking(
+        employee_id=time_tracking.employee_id,
+        clock_in=time_tracking.clock_in,
+        clock_out=time_tracking.clock_out,
+        total_hours=time_tracking.total_hours
+    )
+    db.add(db_time_tracking)
+    db.commit()
+    db.refresh(db_time_tracking)
+    return db_time_tracking
+
+def get_time_tracking_by_employee(db: Session, employee_id: int):
+    return db.query(TimeTracking).filter(TimeTracking.employee_id == employee_id).all()
+
+def update_time_tracking(db: Session, time_tracking_id: int, time_tracking: TimeTrackingUpdate):
+    db_time_tracking = db.query(TimeTracking).filter(TimeTracking.id == time_tracking_id).first()
+    if db_time_tracking:
+        db_time_tracking.clock_in = time_tracking.clock_in
+        db_time_tracking.clock_out = time_tracking.clock_out
+        db_time_tracking.total_hours = time_tracking.total_hours
+        db.commit()
+        db.refresh(db_time_tracking)
+        return db_time_tracking  # Rückgabe des aktualisierten Objekts
+    return None
+
+
+def delete_time_tracking(db: Session, time_tracking_id: int):
+    db_time_tracking = db.query(TimeTracking).filter(TimeTracking.id == time_tracking_id).first()
+    if db_time_tracking:
+        db.delete(db_time_tracking)
+        db.commit()
+    return db_time_tracking
+
+# --- Urlaubsanfragen (Leave) Funktionen ---
+def add_leave(db: Session, leave_request: LeaveCreate):  # Geändert von vacation_request zu leave_request
+    db_leave_request = Leave(  # Geändert von VacationRequest zu Leave
+        employee_id=leave_request.employee_id,
+        start_date=leave_request.start_date,
+        end_date=leave_request.end_date,
+        status=leave_request.status
+    )
+    db.add(db_leave_request)
+    db.commit()
+    db.refresh(db_leave_request)
+    return db_leave_request
+
+def get_leaves_by_employee(db: Session, employee_id: int):  # Geändert von vacation_requests zu leaves
+    return db.query(Leave).filter(Leave.employee_id == employee_id).all()  # Geändert von VacationRequest zu Leave
+
+def update_leave(db: Session, leave_id: int, leave_request: LeaveUpdate):  # Geändert von vacation_request zu leave_request
+    db_leave_request = db.query(Leave).filter(Leave.id == leave_id).first()  # Geändert von VacationRequest zu Leave
+    if db_leave_request:
+        db_leave_request.start_date = leave_request.start_date
+        db_leave_request.end_date = leave_request.end_date
+        db_leave_request.status = leave_request.status
+        db.commit()
+        db.refresh(db_leave_request)
+    return db_leave_request
+
+def delete_leave(db: Session, leave_id: int):  # Geändert von vacation_request zu leave
+    db_leave_request = db.query(Leave).filter(Leave.id == leave_id).first()  # Geändert von VacationRequest zu Leave
+    if db_leave_request:
+        db.delete(db_leave_request)
+        db.commit()
+    return db_leave_request
+
+# --- Gehaltsabrechnungsfunktionen ---
+def add_payroll(db: Session, payroll: PayrollCreate):
+    db_payroll = Payroll(
+        employee_id=payroll.employee_id,
+        salary=payroll.salary,
+        payroll_date=payroll.payroll_date,
+        deductions=payroll.deductions
+    )
+    db.add(db_payroll)
+    db.commit()
+    db.refresh(db_payroll)
+    return db_payroll
+
+def get_payroll_by_employee(db: Session, employee_id: int):
+    return db.query(Payroll).filter(Payroll.employee_id == employee_id).all()
+
+def update_payroll(db: Session, payroll_id: int, payroll: PayrollUpdate):
+    db_payroll = db.query(Payroll).filter(Payroll.id == payroll_id).first()
+    if db_payroll:
+        db_payroll.salary = payroll.salary
+        db_payroll.payroll_date = payroll.payroll_date
+        db_payroll.deductions = payroll.deductions
+        db.commit()
+        db.refresh(db_payroll)
+    return db_payroll
+
+def delete_payroll(db: Session, payroll_id: int):
+    db_payroll = db.query(Payroll).filter(Payroll.id == payroll_id).first()
+    if db_payroll:
+        db.delete(db_payroll)
+        db.commit()
+    return db_payroll

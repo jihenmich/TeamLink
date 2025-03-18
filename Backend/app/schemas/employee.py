@@ -1,5 +1,4 @@
-# app/schemas/employee.py
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from datetime import datetime, date
 
 # Employee Schema für die Erstellung eines Mitarbeiters
@@ -28,12 +27,28 @@ class TimeTrackingCreate(BaseModel):
     class Config:
         orm_mode = True
 
-# Urlaubsanfragen Schema
-class VacationRequestCreate(BaseModel):
+# Urlaubsanfragen Schema (nun als Leave)
+class LeaveCreate(BaseModel):  # Geändert von VacationRequestCreate zu LeaveCreate
     employee_id: int
     start_date: date
     end_date: date
     status: str = "Pending"  # Standardmäßig 'Pending'
+
+    class Config:
+        orm_mode = True
+
+
+# Urlaubsanfragen Update Schema (nun als Leave)
+class LeaveUpdate(BaseModel):  # Geändert von VacationRequestUpdate zu LeaveUpdate
+    start_date: date
+    end_date: date
+    status: str = "Pending"  # Standardmäßig 'Pending'
+
+    @validator('end_date')
+    def check_dates(cls, v, values):
+        if 'start_date' in values and v < values['start_date']:
+            raise ValueError('End date must be after start date')
+        return v
 
     class Config:
         orm_mode = True

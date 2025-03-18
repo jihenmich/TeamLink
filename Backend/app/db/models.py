@@ -1,11 +1,10 @@
-# app/db/models.py
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Date
 from sqlalchemy.orm import relationship
 from app.db.session import Base
 
 # Modell für Mitarbeiter
 class Employee(Base):
-    __tablename__ = "employees"
+    __tablename__ = "employees"  # Der Tabellenname in der Datenbank
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
@@ -13,7 +12,7 @@ class Employee(Base):
 
     # Beziehungen zu den neuen Tabellen
     time_tracking = relationship("TimeTracking", back_populates="employee", cascade="all, delete-orphan")
-    vacation_requests = relationship("VacationRequest", back_populates="employee", cascade="all, delete-orphan")
+    leave = relationship("Leave", back_populates="employee", cascade="all, delete-orphan")  # geändert von vacation_requests zu leave
     payroll = relationship("Payroll", back_populates="employee", cascade="all, delete-orphan")
 
 # Modell für Zeiterfassung
@@ -28,9 +27,9 @@ class TimeTracking(Base):
 
     employee = relationship("Employee", back_populates="time_tracking")  # Rückbeziehung zu Employee
 
-# Modell für Urlaubsanfragen
-class VacationRequest(Base):
-    __tablename__ = "vacation_requests"
+# Modell für Urlaubsanfragen (jetzt als 'leave')
+class Leave(Base):
+    __tablename__ = "leave"  # Der Tabellenname ist nun 'leave'
 
     id = Column(Integer, primary_key=True, index=True)
     employee_id = Column(Integer, ForeignKey('employees.id'))  # Beziehung zu Employee
@@ -38,7 +37,7 @@ class VacationRequest(Base):
     end_date = Column(Date)
     status = Column(String, default="Pending")  # Status der Anfrage: Pending, Approved, Rejected
 
-    employee = relationship("Employee", back_populates="vacation_requests")  # Rückbeziehung zu Employee
+    employee = relationship("Employee", back_populates="leave")  # Rückbeziehung zu Employee (Geändert von vacation_requests zu leave)
 
 # Modell für Gehaltsabrechnung
 class Payroll(Base):
