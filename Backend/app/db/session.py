@@ -1,7 +1,11 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
 import os
+
+load_dotenv()
+
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost/teamlink")
 
@@ -15,3 +19,5 @@ def get_db():
         yield db
     finally:
         db.close()
+
+from app.db import models
