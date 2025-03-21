@@ -4,3 +4,9 @@ sqlalchemy
 psycopg2
 pydantic
 python-dotenv
+pytest
+pytest-asyncio
+requests
+jose
+passlib
+python-multipart

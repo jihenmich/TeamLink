@@ -50,3 +50,12 @@ class Payroll(Base):
     deductions = Column(Float, default=0.0)
 
     employee = relationship("Employee", back_populates="payroll")  # Rückbeziehung zu Employee
+
+
+# Modell für Benutzer (OAuth-Authentifizierung)
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True)
+    hashed_password = Column(String)  # Zum Speichern des gehashten Passworts

@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
-from app.db.models import Employee, TimeTracking, Leave, Payroll  # Geändert von VacationRequest zu Leave
+from app.db.models import Employee, TimeTracking, Leave, Payroll, User  # Hinzugefügt User
 from app.schemas.employee import EmployeeCreate, EmployeeUpdate
 from app.schemas.time_tracking import TimeTrackingCreate, TimeTrackingUpdate
-from app.schemas.leave import LeaveCreate, LeaveUpdate  # Geändert von VacationRequestCreate und VacationRequestUpdate zu LeaveCreate und LeaveUpdate
+from app.schemas.leave import LeaveCreate, LeaveUpdate
 from app.schemas.payroll import PayrollCreate, PayrollUpdate
 
 # --- Mitarbeiterfunktionen ---
@@ -62,7 +62,6 @@ def update_time_tracking(db: Session, time_tracking_id: int, time_tracking: Time
         return db_time_tracking  # Rückgabe des aktualisierten Objekts
     return None
 
-
 def delete_time_tracking(db: Session, time_tracking_id: int):
     db_time_tracking = db.query(TimeTracking).filter(TimeTracking.id == time_tracking_id).first()
     if db_time_tracking:
@@ -71,8 +70,8 @@ def delete_time_tracking(db: Session, time_tracking_id: int):
     return db_time_tracking
 
 # --- Urlaubsanfragen (Leave) Funktionen ---
-def add_leave(db: Session, leave_request: LeaveCreate):  # Geändert von vacation_request zu leave_request
-    db_leave_request = Leave(  # Geändert von VacationRequest zu Leave
+def add_leave(db: Session, leave_request: LeaveCreate):
+    db_leave_request = Leave(
         employee_id=leave_request.employee_id,
         start_date=leave_request.start_date,
         end_date=leave_request.end_date,
@@ -83,11 +82,11 @@ def add_leave(db: Session, leave_request: LeaveCreate):  # Geändert von vacatio
     db.refresh(db_leave_request)
     return db_leave_request
 
-def get_leaves_by_employee(db: Session, employee_id: int):  # Geändert von vacation_requests zu leaves
-    return db.query(Leave).filter(Leave.employee_id == employee_id).all()  # Geändert von VacationRequest zu Leave
+def get_leaves_by_employee(db: Session, employee_id: int):
+    return db.query(Leave).filter(Leave.employee_id == employee_id).all()
 
-def update_leave(db: Session, leave_id: int, leave_request: LeaveUpdate):  # Geändert von vacation_request zu leave_request
-    db_leave_request = db.query(Leave).filter(Leave.id == leave_id).first()  # Geändert von VacationRequest zu Leave
+def update_leave(db: Session, leave_id: int, leave_request: LeaveUpdate):
+    db_leave_request = db.query(Leave).filter(Leave.id == leave_id).first()
     if db_leave_request:
         db_leave_request.start_date = leave_request.start_date
         db_leave_request.end_date = leave_request.end_date
@@ -96,8 +95,8 @@ def update_leave(db: Session, leave_id: int, leave_request: LeaveUpdate):  # Ge�
         db.refresh(db_leave_request)
     return db_leave_request
 
-def delete_leave(db: Session, leave_id: int):  # Geändert von vacation_request zu leave
-    db_leave_request = db.query(Leave).filter(Leave.id == leave_id).first()  # Geändert von VacationRequest zu Leave
+def delete_leave(db: Session, leave_id: int):
+    db_leave_request = db.query(Leave).filter(Leave.id == leave_id).first()
     if db_leave_request:
         db.delete(db_leave_request)
         db.commit()
@@ -135,3 +134,9 @@ def delete_payroll(db: Session, payroll_id: int):
         db.delete(db_payroll)
         db.commit()
     return db_payroll
+
+# --- Benutzerfunktionen ---
+# Diese Funktion wird hinzugefügt, um Benutzer anhand ihrer E-Mail zu finden
+def get_employee_by_email(db: Session, email: str):
+    return db.query(User).filter(User.email == email).first()  
+
