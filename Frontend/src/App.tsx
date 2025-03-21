@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from './pages/Login';
+import { Register } from './pages/Register';  // Registrierung importieren
 import { Dashboard } from './pages/Dashboard';
 import { Header } from './components/layout/Header';
 import { useAuthStore } from './store/auth';
@@ -24,6 +25,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />  {/* Hier die Registrierung hinzufügen */}
         <Route
           path="/dashboard"
           element={

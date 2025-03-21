@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware 
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -11,7 +11,7 @@ from app.api.endpoints.payroll import router as payroll_router
 from app.api.endpoints.time_tracking import router as time_tracking_router
 from app.db import session, repository
 from app.schemas.user import User, UserCreate
-from app.core.security import verify_password, create_access_token, get_password_hash, get_current_user  # Import hinzugefügt
+from app.core.security import verify_password, create_access_token, get_password_hash, get_current_user
 from app.db.models import User as DBUser
 
 # OAuth2PasswordBearer für Authentifizierung
@@ -58,11 +58,11 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     access_token = create_access_token(data={"sub": user.email})
     return {"access_token": access_token, "token_type": "bearer"}
 
-# Benutzerregistrierung-Endpunkt (Optional)
+# Benutzerregistrierung-Endpunkt
 @app.post("/register")
 def register_user(user: UserCreate, db: Session = Depends(session.get_db)):
     # Überprüfe, ob der Benutzer bereits existiert
-    db_user = repository.get_user_by_email(db, user.email)  # Hier `get_user_by_email`
+    db_user = repository.get_user_by_email(db, user.email)
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
@@ -70,7 +70,7 @@ def register_user(user: UserCreate, db: Session = Depends(session.get_db)):
     user_password_hash = get_password_hash(user.password)
     
     new_user = DBUser(
-        email=user.email, 
+        email=user.email,
         hashed_password=user_password_hash  # Das gehashte Passwort speichern
     )
     
