@@ -1,0 +1,41 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout Frontend Code') {
+            steps {
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/jihenmich/TeamLink.git',
+                    ]]
+                ])
+            }
+        }
+
+        stage('Build Frontend') {
+            steps {
+                sh 'docker build -t teamlink-frontend Frontend/'
+            }
+        }
+
+        stage('Run Frontend Tests') {
+            steps {
+                sh 'docker exec teamlink-frontend npm run test'
+            }
+        }
+
+        stage('Deploy Frontend') {
+            steps {
+                sh 'docker exec teamlink-frontend npm run build'
+            }
+        }
+
+        stage('Stop Frontend Services') {
+            steps {
+                sh 'docker compose down'
+            }
+        }
+    }
+}

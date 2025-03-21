@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware 
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -17,6 +18,14 @@ from app.db.models import User as DBUser
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 app = FastAPI(title="TeamLink API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Erlaubt Anfragen nur von localhost:5173 (Frontend)
+    allow_credentials=True,
+    allow_methods=["*"],  # Alle HTTP-Methoden erlauben (z.B. GET, POST, PUT, DELETE)
+    allow_headers=["*"],  # Alle Header erlauben
+)
 
 # Statische Dateien (z.B. für das Favicon) bereitstellen
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -35,16 +44,13 @@ app.include_router(time_tracking_router, prefix="/api/time_tracking", tags=["tim
 # Authentifizierungs-Endpunkt (Token generieren)
 @app.post("/token")
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(session.get_db)):
-    # Abrufen des Benutzers basierend auf dem eingegebenen Benutzernamen (Email)
-    user = repository.get_employee_by_email(db, form_data.username)  # geänderte Funktion
-    print(f"User found: {user}")  # Debugging-Ausgabe, um zu prüfen, ob der Benutzer gefunden wird
+    # Benutzerdaten aus der DB basierend auf der E-Mail-Adresse
+    user = repository.get_user_by_email(db, form_data.username)  # Hier muss `get_user_by_email` verwendet werden
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     # Überprüfen, ob das Passwort korrekt ist
     is_password_valid = verify_password(form_data.password, user.hashed_password)
-    print(f"Password verified: {is_password_valid}")  # Debugging-Ausgabe für die Passwortüberprüfung
-
     if not is_password_valid:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
@@ -56,7 +62,7 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
 @app.post("/register")
 def register_user(user: UserCreate, db: Session = Depends(session.get_db)):
     # Überprüfe, ob der Benutzer bereits existiert
-    db_user = repository.get_employee_by_email(db, user.email)
+    db_user = repository.get_user_by_email(db, user.email)  # Hier `get_user_by_email`
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     

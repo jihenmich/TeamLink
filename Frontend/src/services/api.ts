@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useAuthStore } from '../store/auth';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  baseURL: 'http://localhost:8000',  // Backend-URL
 });
 
 api.interceptors.request.use((config) => {
@@ -13,9 +13,13 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// API Service Exports
 export const authService = {
-  login: async (code: string) => {
-    const response = await api.post('/auth/oauth/callback', { code });
+  login: async (email: string, password: string) => {
+    const response = await api.post('/token', new URLSearchParams({
+      username: email,
+      password: password,
+    }));
     return response.data;
   },
   getProfile: async () => {

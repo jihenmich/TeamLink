@@ -137,6 +137,5 @@ def delete_payroll(db: Session, payroll_id: int):
 
 # --- Benutzerfunktionen ---
 # Diese Funktion wird hinzugefügt, um Benutzer anhand ihrer E-Mail zu finden
-def get_employee_by_email(db: Session, email: str):
-    return db.query(User).filter(User.email == email).first()  
-
+def get_user_by_email(db: Session, email: str):  # Benutzer suchen, nicht Mitarbeiter
+    return db.query(User).filter(User.email == email).first()  # Ändere von `get_employee_by_email` zu `get_user_by_email`

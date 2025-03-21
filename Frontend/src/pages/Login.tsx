@@ -1,25 +1,37 @@
-import { useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Github } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { useAuthStore } from '../store/auth';
 
 export const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
-    }
-  }, [isAuthenticated, navigate]);
+  const handleLogin = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          username: email,
+          password: password,
+        }),
+      });
 
-  const handleLogin = () => {
-    const clientId = import.meta.env.VITE_OAUTH_CLIENT_ID;
-    const redirectUri = `${window.location.origin}/oauth/callback`;
-    const scope = 'read:user user:email';
-    
-    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
+      if (!response.ok) {
+        throw new Error('Invalid credentials');
+      }
+
+      const data = await response.json();
+      useAuthStore.getState().setAccessToken(data.access_token);
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Login failed:', error);
+    }
   };
 
   return (
@@ -28,15 +40,25 @@ export const Login = () => {
         <h1 className="text-center text-3xl font-bold text-gray-900 mb-8">
           Welcome to TeamLink
         </h1>
-        
+
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <div className="space-y-6">
-            <Button
-              onClick={handleLogin}
-              className="w-full flex items-center justify-center space-x-2"
-            >
-              <Github className="w-5 h-5" />
-              <span>Sign in with GitHub</span>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              className="w-full p-2 border border-gray-300 rounded"
+            />
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              className="w-full p-2 border border-gray-300 rounded"
+            />
+            <Button onClick={handleLogin} className="w-full">
+              Login
             </Button>
           </div>
         </div>
