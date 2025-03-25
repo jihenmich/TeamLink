@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.db.models import Employee, TimeTracking, Leave, Payroll, User  # Hinzugefügt User
+from app.db.models import Employee, TimeTracking, Leave, Payroll, User
 from app.schemas.employee import EmployeeCreate, EmployeeUpdate
 from app.schemas.time_tracking import TimeTrackingCreate, TimeTrackingUpdate
 from app.schemas.leave import LeaveCreate, LeaveUpdate
@@ -59,7 +59,7 @@ def update_time_tracking(db: Session, time_tracking_id: int, time_tracking: Time
         db_time_tracking.total_hours = time_tracking.total_hours
         db.commit()
         db.refresh(db_time_tracking)
-        return db_time_tracking  # Rückgabe des aktualisierten Objekts
+        return db_time_tracking
     return None
 
 def delete_time_tracking(db: Session, time_tracking_id: int):
@@ -68,6 +68,10 @@ def delete_time_tracking(db: Session, time_tracking_id: int):
         db.delete(db_time_tracking)
         db.commit()
     return db_time_tracking
+
+# ➕ NEU: Alle Zeiterfassungen abrufen
+def get_all_time_tracking(db: Session):
+    return db.query(TimeTracking).all()
 
 # --- Urlaubsanfragen (Leave) Funktionen ---
 def add_leave(db: Session, leave_request: LeaveCreate):
@@ -102,6 +106,10 @@ def delete_leave(db: Session, leave_id: int):
         db.commit()
     return db_leave_request
 
+# ➕ NEU: Alle Urlaubsanfragen abrufen
+def get_all_leaves(db: Session):
+    return db.query(Leave).all()
+
 # --- Gehaltsabrechnungsfunktionen ---
 def add_payroll(db: Session, payroll: PayrollCreate):
     db_payroll = Payroll(
@@ -135,7 +143,10 @@ def delete_payroll(db: Session, payroll_id: int):
         db.commit()
     return db_payroll
 
+# ➕ NEU: Alle Gehaltsabrechnungen abrufen
+def get_all_payrolls(db: Session):
+    return db.query(Payroll).all()
+
 # --- Benutzerfunktionen ---
-# Diese Funktion wird hinzugefügt, um Benutzer anhand ihrer E-Mail zu finden
-def get_user_by_email(db: Session, email: str):  # Benutzer suchen, nicht Mitarbeiter
-    return db.query(User).filter(User.email == email).first()  # Ändere von `get_employee_by_email` zu `get_user_by_email`
+def get_user_by_email(db: Session, email: str):
+    return db.query(User).filter(User.email == email).first()

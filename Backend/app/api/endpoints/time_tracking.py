@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.db import repository, session
 from app.schemas.time_tracking import TimeTrackingCreate
-from app.db.models import TimeTracking  # Für Datenbankoperationen
+from app.db.models import TimeTracking
 from app.schemas.time_tracking import TimeTrackingUpdate
 
 router = APIRouter()
@@ -17,6 +17,11 @@ def add_time_tracking(employee_id: int, time_tracking: TimeTrackingCreate, db: S
 @router.get("/{employee_id}/time-tracking/")
 def get_time_tracking(employee_id: int, db: Session = Depends(session.get_db)):
     return repository.get_time_tracking_by_employee(db=db, employee_id=employee_id)
+
+# ➕ Alle Zeiterfassungen abrufen
+@router.get("/")
+def get_all_time_tracking(db: Session = Depends(session.get_db)):
+    return repository.get_all_time_tracking(db=db)
 
 # Zeiterfassung anhand der ID abrufen
 @router.get("/time-tracking/{time_tracking_id}")

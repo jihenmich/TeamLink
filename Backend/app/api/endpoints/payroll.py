@@ -18,3 +18,8 @@ def add_payroll(employee_id: int, payroll: PayrollCreate, db: Session = Depends(
 @router.get("/{employee_id}/payroll/")
 def get_payroll(employee_id: int, db: Session = Depends(session.get_db)):
     return repository.get_payroll_by_employee(db=db, employee_id=employee_id)
+
+# ➕ Alle Gehaltsabrechnungen abrufen
+@router.get("/")
+def get_all_payrolls(db: Session = Depends(session.get_db)):
+    return repository.get_all_payrolls(db=db)
