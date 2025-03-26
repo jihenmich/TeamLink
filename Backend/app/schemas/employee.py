@@ -4,6 +4,7 @@ from datetime import datetime, date
 # Employee Schema für die Erstellung eines Mitarbeiters
 class EmployeeCreate(BaseModel):
     name: str  # Beispiel: Der Name des Mitarbeiters
+    role: str
     hours_worked: int  # Stunden des Mitarbeiters, z.B. die Anzahl der gearbeiteten Stunden
     
     class Config:

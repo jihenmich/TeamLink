@@ -7,7 +7,7 @@ from app.schemas.payroll import PayrollCreate, PayrollUpdate
 
 # --- Mitarbeiterfunktionen ---
 def add_employee(db: Session, employee: EmployeeCreate):
-    db_employee = Employee(name=employee.name, hours_worked=employee.hours_worked)
+    db_employee = Employee(name=employee.name, role=employee.role, hours_worked=employee.hours_worked)
     db.add(db_employee)
     db.commit()
     db.refresh(db_employee)

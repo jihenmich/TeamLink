@@ -40,6 +40,6 @@ def update_leave(leave_id: int, leave_request: LeaveUpdate, db: Session = Depend
     return repository.update_leave(db=db, leave_id=leave_id, leave_request=leave_request)
 
 # Urlaubsanfrage löschen
-@router.delete("/leave/{leave_id}")
+@router.delete("/{leave_id}")
 def delete_leave(leave_id: int, db: Session = Depends(session.get_db)):
     return repository.delete_leave(db=db, leave_id=leave_id)
